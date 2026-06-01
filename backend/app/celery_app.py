@@ -22,6 +22,14 @@ celery_app.conf.update(
 )
 celery_app.autodiscover_tasks(["app.tasks"])
 
+# Developer-friendly: allow running tasks synchronously in the web process
+# when Redis/broker is not available. Enable by setting
+# `CELERY_TASK_ALWAYS_EAGER=true` in `.env` or via Settings.
+if settings.celery_task_always_eager:
+    celery_app.conf.task_always_eager = True
+    celery_app.conf.task_eager_propagates = True
+
+
 
 @worker_process_init.connect
 def _configure_worker_logging(**_kwargs):

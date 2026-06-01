@@ -20,8 +20,12 @@ class Settings(BaseSettings):
 
     celery_worker_concurrency: int = 1
     celery_task_time_limit_sec: int = 600
+    # When true tasks run synchronously in the web process (useful for local dev without Redis)
+    celery_task_always_eager: bool = False
 
-    database_url: str = "postgresql://securearchive:securearchive@localhost:5432/securearchive"
+    # Default to a lightweight local SQLite DB for developer convenience.
+    # Production should set `DATABASE_URL` explicitly (Postgres, etc.).
+    database_url: str = "sqlite:///./dev.db"
     redis_url: str = "redis://localhost:6379/0"
     celery_broker_url: str = "redis://localhost:6379/1"
     celery_result_backend: str = "redis://localhost:6379/2"
