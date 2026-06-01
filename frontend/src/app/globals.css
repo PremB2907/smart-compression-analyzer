@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0b1220;
+  --foreground: #e2e8f0;
+  --card: #111827;
+  --accent: #3b82f6;
+}
+
+body {
+  background: radial-gradient(circle at top, #1e293b 0%, #0b1220 45%);
+  color: var(--foreground);
+  min-height: 100vh;
+}
+
+.card {
+  @apply rounded-xl border border-slate-700/60 bg-slate-900/70 p-6 shadow-xl backdrop-blur;
+}

@@ -1,0 +1,2 @@
+# Legacy alias — use backend/requirements.txt or requirements-dev.txt for installs.
+-r backend/requirements.txt

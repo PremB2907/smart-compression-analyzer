@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+# Ephemeral credentials for CI only — not used in production.
+# Override via GitHub repository secrets when needed.
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Ruff
+        run: pip install ruff==0.9.2 && ruff check .
+      - name: Mypy
+        run: pip install mypy==1.14.1 && mypy --explicit-package-bases backend/app compression metrics utils
+
+  backend-tests:
+    needs: lint
+    runs-on: ubuntu-latest
+    env:
+      ENVIRONMENT: development
+      SECRET_KEY: ci-test-secret-key-minimum-32-chars-long
+      DATABASE_URL: postgresql://securearchive:ci_test_only@localhost:5432/securearchive
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: securearchive
+          POSTGRES_PASSWORD: ci_test_only
+          POSTGRES_DB: securearchive
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y tesseract-ocr poppler-utils
+      - name: Install Python deps
+        run: pip install --upgrade pip && pip install -r requirements-dev.txt
+      - name: Run unit tests
+        run: pytest tests/ backend/tests/ -q
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install and build
+        working-directory: frontend
+        run: |
+          npm install
+          npm run build

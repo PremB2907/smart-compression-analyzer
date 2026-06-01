@@ -1,0 +1,33 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["backend", "compression", "metrics", "utils", "tests", "batch_process.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["B008", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"backend/tests/*" = ["B011"]
+"tests/*" = ["E402"]
+"backend/app/services/pipeline.py" = ["E402"]
+"backend/app/tasks/processing.py" = ["E402"]
+
+[tool.mypy]
+python_version = "3.11"
+explicit_package_bases = true
+mypy_path = "."
+ignore_missing_imports = true
+warn_return_any = true
+warn_unused_ignores = true
+exclude = ["frontend", ".venv", "venv", "tests/test_preservation.py", "tests/test_properties.py"]
+disable_error_code = ["no-any-return", "attr-defined", "operator", "arg-type", "assignment"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "backend/tests"]
+pythonpath = [".", "backend"]
+addopts = "-q"
+filterwarnings = [
+    "ignore::pytest.PytestDeprecationWarning",
+    "ignore:divide by zero encountered in scalar divide:RuntimeWarning",
+]
