@@ -1,6 +1,6 @@
 # SecureArchive AI
 
-[![CI](https://github.com/YOUR_USER/smart-compression-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USER/smart-compression-analyzer/actions/workflows/ci.yml)
+[![CI](https://github.com/PremB2907/smart-compression-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/PremB2907/smart-compression-analyzer/actions/workflows/ci.yml)
 
 **Compression. OCR. Integrity. All Verified.**
 
@@ -29,7 +29,7 @@ docker compose up --build
 
 - App: http://localhost:3000  
 - API: http://localhost:8000/api/v1/docs  
-
+-
 Requires Docker Desktop plus system tools in the worker image (Tesseract, DjVuLibre, Poppler).
 
 ### Local Python (tests & batch CLI)
@@ -173,3 +173,102 @@ Smoke test checklist (after containers are healthy):
 - Visit the frontend and register/login
 - Upload a single scanned image via the UI
 - Wait for the Celery worker to finish and verify the analysis page shows metrics
+
+---
+
+## Local Development
+
+Use the local Python flow for running tests and the batch CLI:
+
+```powershell
+py -3 -m venv .venv
+.\ .venv\Scripts\Activate.ps1   # Windows PowerShell
+pip install --upgrade pip
+pip install -r requirements-dev.txt
+```
+
+Run app locally (backend):
+
+```bash
+cd backend
+uvicorn app.main:app --reload
+# In another terminal: celery -A app.celery_app worker --loglevel=info
+```
+
+Run the frontend locally:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Batch CLI (paper pipeline):
+
+```bash
+python batch_process.py --input dataset/ --output results/report.csv --temp ./batch_tmp
+```
+
+---
+
+## Running Tests & Linters
+
+Run the linters, type checks, and test suite (CI mirrors these steps):
+
+```powershell
+ruff check .
+mypy --explicit-package-bases backend/app compression metrics utils
+python -m pytest -q
+```
+
+The repository includes `requirements-dev.txt` (installs `backend/requirements.txt` plus dev tools) to simplify setup for testing.
+
+---
+
+## Configuration & Secrets
+
+- Copy `.env.example` to `.env` for local development. Never commit `.env`.
+- CI uses ephemeral secrets; set GitHub Secrets in your repository for production deployments.
+- Important env vars: `SECRET_KEY`, `DATABASE_URL`, `POSTGRES_PASSWORD`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `NEXTAUTH_SECRET`, `CELERY_*`, `REDIS_URL`.
+
+See [docs/CI.md](docs/CI.md) for CI workflow and recommended secrets configuration.
+
+---
+
+## Developer Notes
+
+- Logging: backend uses a central `logging_config.py` for structured stdout logs.
+- Subprocess calls: external tools (DjVuLibre, Poppler, Tesseract) are wrapped with `compression/subprocess_utils.py` to enforce timeouts and bounded output capture.
+- Storage: `backend/app/services/storage.py` handles MinIO uploads/downloads with retry/backoff.
+- Security: defaults are safe for local development; enable `ENVIRONMENT=production` and set secure `SECRET_KEY` in production.
+
+---
+
+## CI / Release
+
+CI runs `ruff`, `mypy`, and `pytest`. After pushing to GitHub, open a PR to run the workflows automatically. Add repository secrets per `docs/CI.md` for integration testing.
+
+Badge (update with your username after first push):
+
+[![CI](https://github.com/YOUR_USER/smart-compression-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USER/smart-compression-analyzer/actions/workflows/ci.yml)
+
+---
+
+## Contributing
+
+Contributions are welcome. Please:
+
+1. Fork the repo
+2. Create a feature branch
+3. Run linters and tests locally
+4. Open a PR with a clear description and test plan
+
+---
+
+## License
+
+This project is distributed under the MIT License. See the `LICENSE` file for details.
+
+---
+
+If you'd like, I can add the CI badge for you now (replace `YOUR_USER`), or open a PR that includes the README change. I will push this updated README to the repo and create the commit.
