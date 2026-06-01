@@ -1,3 +1,124 @@
+# smart-compression-analyzer
+
+This repository contains a research-oriented image compression, steganography
+and analysis pipeline with a FastAPI backend, Celery worker tasks, and a Next.js
+frontend. The project is configured for production with Docker but also supports
+local development without Docker by running Celery tasks synchronously.
+
+Quick links
+- API backend: `backend/`
+- Frontend: `frontend/`
+- Compression tools: `compression/`
+- Batch CLI: `batch_process.py`
+
+Prerequisites
+- Python 3.11+ and a virtual environment (venv).
+- Node.js 18+ for the frontend (only if running the Next.js app).
+- Optional for async testing: Docker (to run Redis, Postgres, MinIO). If Docker
+	is not available, the backend can run in a development mode where Celery
+	tasks are executed eagerly (synchronously) inside the web process.
+
+Local development (recommended)
+
+1. Create and activate a virtualenv (from project root):
+
+```powershell
+python -m venv .venv
+.
+.\.venv\Scripts\Activate.ps1
+```
+
+2. Install Python dependencies:
+
+```powershell
+pip install -r requirements.txt
+pip install -r requirements-dev.txt  # optional for tests and linters
+```
+
+3. Backend environment
+- Copy the sample `.env` to the backend folder (optional, you can set env
+	vars directly):
+
+```powershell
+copy .env backend\.env
+```
+
+- By default the repo includes a development-friendly setting that uses a
+	lightweight SQLite database and supports Celery eager mode. To enable eager
+	mode (tasks run synchronously so you don't need Redis), ensure the following
+	is set in `backend/.env` or your environment:
+
+```text
+CELERY_TASK_ALWAYS_EAGER=true
+```
+
+4. Run the backend (development):
+
+```powershell
+cd backend
+..\.venv\Scripts\python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+With `CELERY_TASK_ALWAYS_EAGER=true` the background tasks will run inline in
+the API process, which is convenient for local development and debugging.
+
+Running Celery asynchronously (with Redis)
+- If you prefer the real asynchronous behavior or are preparing integration
+	tests, run Redis and then a worker. With Docker Compose (recommended):
+
+```powershell
+docker compose up -d redis
+cd backend
+..\.venv\Scripts\python -m celery -A app.celery_app worker --loglevel=info --concurrency=1
+```
+
+Frontend (Next.js)
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Batch CLI
+- The `batch_process.py` script runs the pipeline over a dataset directory and
+	writes a CSV report. Example:
+
+```powershell
+python batch_process.py --input dataset/ --output results/report.csv --temp ./batch_tmp
+```
+
+Testing and linters
+
+```powershell
+cd backend
+..\.venv\Scripts\python -m pytest -q
+
+# Lint and type-check
+ruff check .
+mypy .
+```
+
+Notes and troubleshooting
+- If you see import errors for `app` when running scripts from the repository
+	root, run them with `PYTHONPATH='backend'` or `cd backend` first. Example:
+
+```powershell
+$env:PYTHONPATH='C:\path\to\repo\backend'
+..\.venv\Scripts\python backend\scripts\test_celery_eager.py
+```
+
+- The repository is configured to favor safe defaults for local development
+	(SQLite, eager Celery). For production, set `DATABASE_URL`, `MINIO_*` and
+	`SECRET_KEY` environment variables and run services via Docker Compose.
+
+Contributing
+- Run tests and linters before pushing changes. Use feature branches and open
+	PRs against `main`.
+
+License
+- See `LICENSE` (if present) or ask the maintainer for license details.
+
 # SecureArchive AI
 
 [![CI](https://github.com/PremB2907/smart-compression-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/PremB2907/smart-compression-analyzer/actions/workflows/ci.yml)
