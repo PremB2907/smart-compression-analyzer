@@ -523,7 +523,7 @@ def test_property_7_compression_ratio_jpeg(seed, width, height, module_tmp_dir):
     For any random image, compression_ratio on JPEG output equals
     S_orig / S_comp (JPEG compressor is unchanged by the fix set).
     """
-    from compression.jpeg_compressor import compress_jpeg
+    from compression_codecs.jpeg_compressor import compress_jpeg
 
     src = _make_rgb_png(
         module_tmp_dir, f"cr7_jpeg_src_{seed}_{width}x{height}.png", width, height, seed
@@ -559,7 +559,7 @@ def test_property_7_compression_ratio_png(seed, width, height, module_tmp_dir):
     For any random image, compression_ratio on PNG output equals
     S_orig / S_comp (PNG compressor is unchanged by the fix set).
     """
-    from compression.png_compressor import compress_png
+    from compression_codecs.png_compressor import compress_png
 
     src = _make_rgb_png(
         module_tmp_dir, f"cr7_png_src_{seed}_{width}x{height}.png", width, height, seed
@@ -595,7 +595,7 @@ def test_property_7_compression_ratio_tiff(seed, width, height, module_tmp_dir):
     For any random image, compression_ratio on TIFF output equals
     S_orig / S_comp (TIFF compressor is unchanged by the fix set).
     """
-    from compression.tiff_compressor import compress_tiff
+    from compression_codecs.tiff_compressor import compress_tiff
 
     src = _make_rgb_png(
         module_tmp_dir, f"cr7_tiff_src_{seed}_{width}x{height}.png", width, height, seed

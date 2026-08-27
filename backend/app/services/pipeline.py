@@ -19,13 +19,13 @@ ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from compression.djvu_converter import convert_djvu
-from compression.jpeg_compressor import compress_jpeg as compress_jpeg_file
-from compression.pdf_converter import convert_pdf
-from compression.png_compressor import compress_png
-from compression.subprocess_utils import run_command
-from compression.tiff_compressor import compress_tiff
-from compression.webp_compressor import compress_webp
+from compression_codecs.djvu_converter import convert_djvu
+from compression_codecs.jpeg_compressor import compress_jpeg as compress_jpeg_file
+from compression_codecs.pdf_converter import convert_pdf
+from compression_codecs.png_compressor import compress_png
+from compression_codecs.subprocess_utils import run_command
+from compression_codecs.tiff_compressor import compress_tiff
+from compression_codecs.webp_compressor import compress_webp
 from metrics.ber import compute_ber, compute_payload_accuracy
 from metrics.compression_ratio import compression_ratio
 from metrics.mse import compute_mse
@@ -111,6 +111,15 @@ def _decode_to_grayscale(path: Path) -> np.ndarray | None:
         finally:
             if temp_png.exists():
                 temp_png.unlink(missing_ok=True)
+    elif ext == ".pdf":
+        try:
+            from pdf2image import convert_from_path
+            images = convert_from_path(str(path))
+            if images:
+                return np.array(images[0].convert("L"), dtype=np.uint8)
+        except Exception as exc:
+            logger.warning("PDF decode failed for %s: %s", path.name, exc)
+            return None
     try:
         return np.array(Image.open(path).convert("L"), dtype=np.uint8)
     except (OSError, ValueError) as exc:
@@ -190,11 +199,11 @@ def run_pipeline(input_path: Path, work_dir: Path) -> PipelineResult:
 
         reconstructed = _save_reconstructed(out_path, fmt_dir, fmt)
         cr = compression_ratio(stego_path, out_path)
-        mse_val = compute_mse(stego_path, out_path)
-        psnr_val = compute_psnr(stego_path, out_path)
-        ssim_val = compute_ssim(stego_path, out_path)
+        mse_val = compute_mse(stego_path, reconstructed or out_path)
+        psnr_val = compute_psnr(stego_path, reconstructed or out_path)
+        ssim_val = compute_ssim(stego_path, reconstructed or out_path)
 
-        t_hat = extract_text(out_path)
+        t_hat = extract_text(reconstructed or out_path)
         ocr_acc = ocr_accuracy(t_hat, ground_truth)
         cer = 1.0 - ocr_acc if ground_truth else 0.0
 

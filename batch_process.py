@@ -21,12 +21,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
-from compression.djvu_converter import convert_djvu
-from compression.jpeg_compressor import compress_jpeg
-from compression.pdf_converter import convert_pdf
-from compression.png_compressor import compress_png
-from compression.tiff_compressor import compress_tiff
-from compression.webp_compressor import compress_webp
+from compression_codecs.djvu_converter import convert_djvu
+from compression_codecs.jpeg_compressor import compress_jpeg
+from compression_codecs.pdf_converter import convert_pdf
+from compression_codecs.png_compressor import compress_png
+from compression_codecs.tiff_compressor import compress_tiff
+from compression_codecs.webp_compressor import compress_webp
 from metrics.ber import compute_ber, compute_payload_accuracy
 from metrics.compression_ratio import compression_ratio
 from metrics.mse import compute_mse
@@ -57,6 +57,42 @@ COMPRESSION_FUNCS = {
     "PDF": convert_pdf,
     "DjVu": convert_djvu,
 }
+
+
+def decode_to_grayscale(path: Path) -> np.ndarray | None:
+    ext = path.suffix.lower()
+    if ext == ".djvu":
+        import subprocess
+        temp_png = path.with_suffix(".decoded.png")
+        try:
+            subprocess.run(
+                ["ddjvu", "-format=png", str(path), str(temp_png)],
+                check=True,
+                capture_output=True,
+                timeout=30,
+            )
+            arr = np.array(Image.open(temp_png).convert("L"), dtype=np.uint8)
+            return arr
+        except Exception:
+            return None
+        finally:
+            if temp_png.exists():
+                try:
+                    temp_png.unlink()
+                except Exception:
+                    pass
+    elif ext == ".pdf":
+        try:
+            from pdf2image import convert_from_path
+            images = convert_from_path(str(path))
+            if images:
+                return np.array(images[0].convert("L"), dtype=np.uint8)
+        except Exception:
+            return None
+    try:
+        return np.array(Image.open(path).convert("L"), dtype=np.uint8)
+    except Exception:
+        return None
 
 
 def process_file(input_path: Path, out_dir: Path) -> dict:
@@ -100,30 +136,42 @@ def process_file(input_path: Path, out_dir: Path) -> dict:
 
         # Decode time
         start = time.time()
-        try:
-            _img = Image.open(out_path)
-            _img.load()
-        except Exception:
-            pass
+        decoded_arr = decode_to_grayscale(out_path)
         decode_time = time.time() - start
 
-        cr = compression_ratio(stego_path, out_path)
-        mse_val = compute_mse(stego_path, out_path)
-        psnr_val = compute_psnr(stego_path, out_path)
-        ssim_val = compute_ssim(stego_path, out_path)
+        reconstructed_path = out_path
+        temp_reconstructed = None
+        if fmt in ("DjVu", "PDF") and decoded_arr is not None:
+            temp_reconstructed = out_dir / f"{out_path.stem}_reconstructed.png"
+            Image.fromarray(decoded_arr).save(temp_reconstructed, "PNG")
+            reconstructed_path = temp_reconstructed
 
-        t_hat = extract_text(out_path)
+        cr = compression_ratio(stego_path, out_path)
+        mse_val = compute_mse(stego_path, reconstructed_path)
+        psnr_val = compute_psnr(stego_path, reconstructed_path)
+        ssim_val = compute_ssim(stego_path, reconstructed_path)
+
+        t_hat = extract_text(reconstructed_path)
         ocr_acc = ocr_accuracy(t_hat, t_ref)
 
         try:
-            decoded_arr = np.array(Image.open(out_path).convert("L"), dtype=np.uint8)
-            extracted_bits = extract_lsb_payload(decoded_arr, PAYLOAD_BITS)
-            ber_val = compute_ber(payload_bits, extracted_bits)
-            extracted_payload_str = bits_to_string(extracted_bits)
-            payload_acc = compute_payload_accuracy(original_payload_str, extracted_payload_str)
+            if decoded_arr is not None:
+                extracted_bits = extract_lsb_payload(decoded_arr, PAYLOAD_BITS)
+                ber_val = compute_ber(payload_bits, extracted_bits)
+                extracted_payload_str = bits_to_string(extracted_bits)
+                payload_acc = compute_payload_accuracy(original_payload_str, extracted_payload_str)
+            else:
+                ber_val = 0.5
+                payload_acc = 0.0
         except Exception:
             ber_val = 0.5
             payload_acc = 0.0
+
+        if temp_reconstructed and temp_reconstructed.exists():
+            try:
+                temp_reconstructed.unlink()
+            except Exception:
+                pass
 
         results.update(
             {

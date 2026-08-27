@@ -6,7 +6,7 @@ Requires the external `c44` tool from DjVuLibre to be installed on the system.
 
 from pathlib import Path
 
-from compression.subprocess_utils import run_command
+from compression_codecs.subprocess_utils import run_command
 
 
 def convert_djvu(input_path: Path, output_dir: Path) -> Path:

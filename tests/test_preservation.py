@@ -28,9 +28,9 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from compression.jpeg_compressor import compress_jpeg
-from compression.png_compressor import compress_png
-from compression.tiff_compressor import compress_tiff
+from compression_codecs.jpeg_compressor import compress_jpeg
+from compression_codecs.png_compressor import compress_png
+from compression_codecs.tiff_compressor import compress_tiff
 from metrics.compression_ratio import compression_ratio
 from metrics.psnr import compute_psnr
 from metrics.ssim import compute_ssim

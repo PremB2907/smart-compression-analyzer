@@ -31,8 +31,18 @@ def preprocess_image(image_path: str | Path) -> np.ndarray:
     image_path = Path(image_path)
 
     # Step 1 — Greyscale normalisation
-    with Image.open(image_path) as img:
-        grey_img = img.convert("L")
+    if image_path.suffix.lower() == ".pdf":
+        try:
+            from pdf2image import convert_from_path
+            images = convert_from_path(str(image_path))
+            if not images:
+                raise ValueError("No pages found in PDF")
+            grey_img = images[0].convert("L")
+        except Exception as e:
+            raise ValueError(f"Failed to load PDF in preprocessing: {e}") from e
+    else:
+        with Image.open(image_path) as img:
+            grey_img = img.convert("L")
     arr = np.array(grey_img, dtype=np.float32)
     # Normalise to [0, 255] (handles images that may have been in a different range)
     arr_min, arr_max = arr.min(), arr.max()

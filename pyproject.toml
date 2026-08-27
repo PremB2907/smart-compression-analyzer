@@ -1,11 +1,11 @@
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-src = ["backend", "compression", "metrics", "utils", "tests", "batch_process.py"]
+src = ["backend", "compression_codecs", "metrics", "utils", "tests", "batch_process.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
-ignore = ["B008", "E501"]
+ignore = ["B008", "E501", "UP042"]
 
 [tool.ruff.lint.per-file-ignores]
 "backend/tests/*" = ["B011"]
@@ -14,7 +14,7 @@ ignore = ["B008", "E501"]
 "backend/app/tasks/processing.py" = ["E402"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.14"
 explicit_package_bases = true
 mypy_path = "."
 ignore_missing_imports = true

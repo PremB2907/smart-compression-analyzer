@@ -112,7 +112,7 @@ def test_bug_1_5_webp_quality_default():
     Inspect the source of webp_compressor.py and assert the default is 75.
     On unfixed code the default is 80 — this test will fail.
     """
-    webp_path = os.path.join(PROJECT_ROOT, "compression", "webp_compressor.py")
+    webp_path = os.path.join(PROJECT_ROOT, "compression_codecs", "webp_compressor.py")
     with open(webp_path, encoding="utf-8") as f:
         source = f.read()
 
@@ -131,7 +131,7 @@ def test_bug_1_7_djvu_uses_c44():
     Inspect the source of djvu_converter.py and assert the command contains 'c44'.
     On unfixed code the command is 'img2djvu' — this test will fail.
     """
-    djvu_path = os.path.join(PROJECT_ROOT, "compression", "djvu_converter.py")
+    djvu_path = os.path.join(PROJECT_ROOT, "compression_codecs", "djvu_converter.py")
     with open(djvu_path, encoding="utf-8") as f:
         source = f.read()
 
