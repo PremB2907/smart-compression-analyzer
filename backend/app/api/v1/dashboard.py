@@ -97,7 +97,8 @@ def overview(db: Session = Depends(get_db), user: User = Depends(get_current_use
 
 
 def _avg(values: list) -> float | None:
-    filtered = [v for v in values if v is not None]
+    import math
+    filtered = [v for v in values if v is not None and not math.isinf(v) and not math.isnan(v)]
     if not filtered:
         return None
     return round(sum(filtered) / len(filtered), 4)
