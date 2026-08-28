@@ -86,7 +86,7 @@ async def upload_files(
             mime_type=file.content_type,
             size_bytes=len(content),
             checksum_sha256=checksum,
-            status=UploadStatus.pending,
+            status=UploadStatus.processing,
         )
         db.add(upload)
         db.flush()
@@ -94,7 +94,6 @@ async def upload_files(
 
         task = process_upload_task.delay(upload.id)
         upload.celery_task_id = task.id
-        upload.status = UploadStatus.processing
         created.append(upload)
 
         db.add(
@@ -205,12 +204,24 @@ def task_status(
     upload = db.query(Upload).filter(Upload.id == upload_id, Upload.user_id == user.id).first()
     if not upload:
         raise HTTPException(status_code=404, detail="Upload not found")
-    state = "PENDING"
-    if upload.celery_task_id:
-        from app.celery_app import celery_app
+    
+    # Map database upload status to celery state strings where appropriate
+    if upload.status == UploadStatus.completed:
+        state = "SUCCESS"
+    elif upload.status == UploadStatus.failed:
+        state = "FAILURE"
+    else:
+        state = "PENDING"
+        if upload.celery_task_id:
+            try:
+                from app.celery_app import celery_app
+                result = celery_app.AsyncResult(upload.celery_task_id)
+                state = result.state
+            except Exception:
+                # If Redis is offline/unreachable, fallback to the database status
+                if upload.status == UploadStatus.processing:
+                    state = "PENDING"
 
-        result = celery_app.AsyncResult(upload.celery_task_id)
-        state = result.state
     return {"upload_id": upload_id, "status": upload.status.value, "celery_state": state}
 
 
