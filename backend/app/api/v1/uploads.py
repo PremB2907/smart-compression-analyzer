@@ -90,6 +90,7 @@ async def upload_files(
         )
         db.add(upload)
         db.flush()
+        db.commit()  # Commit early so the synchronous celery task can fetch this upload
 
         task = process_upload_task.delay(upload.id)
         upload.celery_task_id = task.id
@@ -105,8 +106,8 @@ async def upload_files(
                 details=file.filename,
             )
         )
+        db.commit()
 
-    db.commit()
     return BatchUploadResponse(
         uploads=[UploadResponse.model_validate(u) for u in created],
         message="Processing started asynchronously",

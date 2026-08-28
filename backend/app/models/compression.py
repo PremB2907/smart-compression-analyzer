@@ -43,6 +43,8 @@ class MetricRecord(Base):
     throughput_mbps: Mapped[float | None] = mapped_column(Float, nullable=True)
     embedding_psnr: Mapped[float | None] = mapped_column(Float, nullable=True)
 
+    compression_run = relationship("CompressionRun", back_populates="metrics")
+
 
 class OCRResult(Base):
     __tablename__ = "ocr_results"
