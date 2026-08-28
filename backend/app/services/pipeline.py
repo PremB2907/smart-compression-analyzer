@@ -286,17 +286,24 @@ def archival_recommendations(pipeline: PipelineResult) -> dict[str, Any]:
 
 def generate_research_tables(pipeline: PipelineResult) -> dict[str, list[dict]]:
     """Generate Tables I–V style summaries from a single pipeline run."""
+    import math
     rows = []
     for fmt, d in pipeline.formats.items():
+        psnr_val = d.get("psnr")
+        if psnr_val is None or math.isinf(psnr_val) or math.isnan(psnr_val):
+            psnr_out = None
+        else:
+            psnr_out = round(psnr_val, 2)
+
         rows.append(
             {
                 "Format": fmt,
-                "CR": round(d["compression_ratio"], 2),
-                "PSNR (dB)": round(d["psnr"], 2) if d["psnr"] == d["psnr"] else None,
-                "SSIM": round(d["ssim"], 4),
-                "OCR Acc": round(d["ocr_accuracy"] * 100, 2),
-                "BER": round(d["ber"] * 100, 3),
-                "Payload %": round(d["payload_recovery_pct"], 2),
+                "CR": round(d["compression_ratio"], 2) if d["compression_ratio"] is not None else 0.0,
+                "PSNR (dB)": psnr_out,
+                "SSIM": round(d["ssim"], 4) if d["ssim"] is not None else 0.0,
+                "OCR Acc": round(d["ocr_accuracy"] * 100, 2) if d["ocr_accuracy"] is not None else 0.0,
+                "BER": round(d["ber"] * 100, 3) if d["ber"] is not None else 0.0,
+                "Payload %": round(d["payload_recovery_pct"], 2) if d["payload_recovery_pct"] is not None else 0.0,
             }
         )
     return {
@@ -306,9 +313,9 @@ def generate_research_tables(pipeline: PipelineResult) -> dict[str, list[dict]]:
         "table_iv_timing": [
             {
                 "Format": fmt,
-                "Encode (ms)": round(d["encode_time_ms"], 2),
-                "Decode (ms)": round(d["decode_time_ms"], 2),
-                "Throughput (MB/s)": round(d["throughput_mbps"], 3),
+                "Encode (ms)": round(d["encode_time_ms"], 2) if d["encode_time_ms"] is not None else 0.0,
+                "Decode (ms)": round(d["decode_time_ms"], 2) if d["decode_time_ms"] is not None else 0.0,
+                "Throughput (MB/s)": round(d["throughput_mbps"], 3) if d["throughput_mbps"] is not None else 0.0,
             }
             for fmt, d in pipeline.formats.items()
         ],

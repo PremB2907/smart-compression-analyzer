@@ -74,6 +74,10 @@ export async function uploadFiles(files: FileList | File[]) {
   return res.json();
 }
 
+export async function listUploads() {
+  return apiFetch<any[]>("/uploads");
+}
+
 export async function getAnalysis(uploadId: number) {
   return apiFetch(`/uploads/${uploadId}`);
 }

@@ -28,6 +28,9 @@ app = FastAPI(
     redoc_url=f"{settings.api_v1_prefix}/redoc",
 )
 
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
@@ -35,6 +38,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+local_storage_path = Path(__file__).resolve().parents[2] / "uploads" / "_local_storage"
+local_storage_path.mkdir(parents=True, exist_ok=True)
+app.mount("/dev-storage", StaticFiles(directory=str(local_storage_path)), name="dev-storage")
 
 app.include_router(api_router, prefix=settings.api_v1_prefix)
 

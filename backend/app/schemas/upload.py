@@ -32,6 +32,8 @@ class MetricOut(BaseModel):
     encode_time_ms: float | None
     decode_time_ms: float | None
     throughput_mbps: float | None
+    reconstructed_url: str | None = None
+    compressed_url: str | None = None
 
 
 class OCRDiffOut(BaseModel):
@@ -53,6 +55,7 @@ class StegoOut(BaseModel):
 class AnalysisResult(BaseModel):
     upload_id: int
     status: str
+    original_url: str | None = None
     steganography: StegoOut | None
     metrics: list[MetricOut]
     ocr_by_format: dict[str, OCRDiffOut]

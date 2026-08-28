@@ -113,6 +113,14 @@ async def upload_files(
     )
 
 
+@router.get("", response_model=list[UploadResponse])
+def list_uploads(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    return db.query(Upload).filter(Upload.user_id == user.id).order_by(Upload.id.desc()).all()
+
+
 @router.get("/{upload_id}", response_model=AnalysisResult)
 def get_analysis(
     upload_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
@@ -120,6 +128,10 @@ def get_analysis(
     upload = db.query(Upload).filter(Upload.id == upload_id, Upload.user_id == user.id).first()
     if not upload:
         raise HTTPException(status_code=404, detail="Upload not found")
+
+    from app.services.storage import StorageService
+    storage = StorageService()
+    original_url = storage.get_presigned_url(upload.storage_key)
 
     runs = db.query(CompressionRun).filter(CompressionRun.upload_id == upload.id).all()
     metrics_out: list[MetricOut] = []
@@ -133,6 +145,16 @@ def get_analysis(
         m = db.query(MetricRecord).filter(MetricRecord.compression_run_id == run.id).first()
         ocr = db.query(OCRResult).filter(OCRResult.compression_run_id == run.id).first()
         if m:
+            reconstructed_url = (
+                storage.get_presigned_url(run.reconstructed_storage_key)
+                if run.reconstructed_storage_key
+                else None
+            )
+            compressed_url = (
+                storage.get_presigned_url(run.compressed_storage_key)
+                if run.compressed_storage_key
+                else None
+            )
             metrics_out.append(
                 MetricOut(
                     format=run.format,
@@ -148,6 +170,8 @@ def get_analysis(
                     encode_time_ms=run.encode_time_ms,
                     decode_time_ms=run.decode_time_ms,
                     throughput_mbps=m.throughput_mbps,
+                    reconstructed_url=reconstructed_url,
+                    compressed_url=compressed_url,
                 )
             )
         if ocr:
@@ -187,6 +211,7 @@ def get_analysis(
     return AnalysisResult(
         upload_id=upload.id,
         status=upload.status.value,
+        original_url=original_url,
         steganography=stego_out,
         metrics=metrics_out,
         ocr_by_format=ocr_map,

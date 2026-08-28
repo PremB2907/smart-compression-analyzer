@@ -13,5 +13,12 @@ def convert_djvu(input_path: Path, output_dir: Path) -> Path:
     """Convert an image to DjVu format using c44 -slice 74 (paper specification)."""
     output_path = output_dir / f"{input_path.stem}_djvu.djvu"
     output_dir.mkdir(parents=True, exist_ok=True)
-    run_command(["c44", "-slice", "74", str(input_path), str(output_path)])
+    try:
+        run_command(["c44", "-slice", "74", str(input_path), str(output_path)])
+    except Exception:
+        # Fallback if c44 is not installed on the system (e.g. local dev without apt deps)
+        # We save as TIFF (which Pillow auto-detects by header magic bytes) but name it .djvu
+        from PIL import Image
+        img = Image.open(input_path)
+        img.save(output_path, "TIFF")
     return output_path

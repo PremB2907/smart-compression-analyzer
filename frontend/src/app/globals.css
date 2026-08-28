@@ -2,19 +2,95 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Outfit:wght@400;600;800&display=swap');
+
 :root {
-  --background: #0b1220;
+  --background: #0c0f17;
   --foreground: #e2e8f0;
-  --card: #111827;
-  --accent: #3b82f6;
+  --card: #161b26;
+  --accent: #2563eb;
 }
 
 body {
-  background: radial-gradient(circle at top, #1e293b 0%, #0b1220 45%);
+  background-color: #0c0f17;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
   color: var(--foreground);
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
   min-height: 100vh;
 }
 
+/* Neo-Brutalist Card styling */
 .card {
-  @apply rounded-xl border border-slate-700/60 bg-slate-900/70 p-6 shadow-xl backdrop-blur;
+  @apply rounded-none border-[3px] border-black bg-slate-900 p-6 transition-all duration-150;
+  box-shadow: 4px 4px 0px 0px var(--accent);
+}
+
+.card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0px 0px var(--accent);
+}
+
+/* Color variations for cards */
+.card-blue {
+  --accent: #3b82f6;
+}
+.card-green {
+  --accent: #10b981;
+}
+.card-yellow {
+  --accent: #eab308;
+}
+.card-purple {
+  --accent: #a855f7;
+}
+.card-orange {
+  --accent: #f97316;
+}
+.card-cyan {
+  --accent: #06b6d4;
+}
+
+/* Neo-Brutalist buttons */
+button, .btn {
+  @apply transition-all duration-100 font-bold rounded-none border-2 border-black !important;
+}
+
+button:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+}
+
+button:active:not(:disabled) {
+  transform: translate(1px, 1px);
+}
+
+/* Styling native selects and inputs to look neo-brutalist */
+select, input[type="text"], input[type="password"], input[type="file"], textarea {
+  @apply rounded-none border-2 border-black bg-slate-800 text-white px-3 py-2 outline-none transition-all duration-150 focus:border-brand-500 !important;
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+select:focus, input:focus, textarea:focus {
+  box-shadow: 4px 4px 0px 0px var(--accent);
+  transform: translate(-1px, -1px);
+}
+
+/* Tables styling */
+table.brutalist-table {
+  @apply w-full border-collapse border-[3px] border-black text-left text-sm;
+  background-color: #161b26;
+}
+
+table.brutalist-table th {
+  @apply border-b-2 border-r-2 border-black bg-slate-800 p-3 font-bold text-white;
+}
+
+table.brutalist-table td {
+  @apply border-b border-r border-black p-3 text-slate-300;
+}
+
+table.brutalist-table tr:hover {
+  @apply bg-slate-800/40;
 }
