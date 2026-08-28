@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import * as Progress from "@radix-ui/react-progress";
-import { getAnalysis, getTaskStatus, uploadFiles } from "@/lib/api";
+import { getAnalysis, getTaskStatus, getToken, uploadFiles } from "@/lib/api";
 
 const ACCEPT = ".png,.jpg,.jpeg,.bmp,.tif,.tiff,.pdf";
 
@@ -13,6 +13,11 @@ export default function UploadPage() {
   const [uploadIds, setUploadIds] = useState<number[]>([]);
   const [results, setResults] = useState<Record<number, unknown>>({});
   const [error, setError] = useState("");
+  const [authenticated, setAuthenticated] = useState(true);
+
+  useEffect(() => {
+    setAuthenticated(!!getToken());
+  }, []);
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -50,6 +55,17 @@ export default function UploadPage() {
       setError(e instanceof Error ? e.message : "Upload failed");
     }
   };
+
+  if (!authenticated) {
+    return (
+      <div className="mx-auto max-w-4xl space-y-6">
+        <div>
+          <h2 className="text-2xl font-semibold text-white">Document Upload</h2>
+          <p className="mt-4 text-amber-400">Not authenticated — sign in to upload files.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
