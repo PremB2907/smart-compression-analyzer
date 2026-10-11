@@ -30,6 +30,16 @@ class Settings(BaseSettings):
     celery_broker_url: str = "redis://localhost:6379/1"
     celery_result_backend: str = "redis://localhost:6379/2"
 
+    # Cloud Integration settings (Floci / AWS)
+    cloud_mode: str = "local"  # "local" or "floci"
+    aws_endpoint_url: str = "http://localhost:4566"
+    aws_region: str = "us-east-1"
+    aws_access_key_id: str = "test"
+    aws_secret_access_key: str = "test"
+    s3_bucket: str = "smart-compression-artifacts"
+    dynamodb_table: str = "smart-compression-jobs"
+    sqs_queue_name: str = "smart-compression-tasks"
+
     minio_endpoint: str = "localhost:9000"
     minio_access_key: str = "minioadmin"
     minio_secret_key: str = "minioadmin"
